@@ -175,16 +175,23 @@ class RosGraphDotcodeGenerator:
         if sub in self.edges and topic in self.edges[sub] and pub in self.edges[sub][topic]:
             penwidth = self._calc_edge_penwidth(sub,topic,pub)
             color = self._calc_edge_color(sub,topic,pub)
-            period = self.edges[sub][topic][pub].period_mean.to_sec()
+            edge_stats = self.edges[sub][topic][pub]
+            period = edge_stats.period_mean.to_sec()
             if period > 0.0:
                 freq = str(round(1.0 / period, 1))
             else:
                 freq = "?"
-            age = self.edges[sub][topic][pub].stamp_age_mean.to_sec()
+            age = edge_stats.stamp_age_mean.to_sec()
             age_string = ""
             if age > 0.0:
                 age_string = " // " + str(round(age, 2) * 1000) + " ms"
-            label = freq + " Hz" + age_string
+            duration = abs((edge_stats.window_stop - edge_stats.window_start).to_sec())
+            
+            bps = 0
+            if duration > 0.0: 
+            	bps = round(edge_stats.traffic / (1000*duration), 3)
+            	
+            label = freq + " Hz" + age_string + " " + str(bps) + "Kb"
             return [label, penwidth, color]
         else:
             return [None, None, None]
